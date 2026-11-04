@@ -54,14 +54,29 @@ El proyecto utiliza:
 | Protocolo | UART |
 | Velocidad | 9600 baudios |
 | Formato | 8 bits, sin paridad, 1 bit de parada |
-| Trama | ADC0,ADC1 |
-| Terminador | Nueva línea (`\n`) |
+| Tipo de dato | Byte (`uint8_t`) |
+| Rango transmitido | 0–200 |
 
-Ejemplo de trama transmitida:
 
-```text
-512,768
-```
+Cada lectura ADC se convierte a un porcentaje entre 0 y 100 %. Los canales se identifican mediante un desplazamiento de 100 unidades:
+
+- **ADC0:** se transmite directamente el porcentaje (0–100).
+- **ADC1:** se transmite el porcentaje sumado a 100 (100–200).
+
+Cada dato se transmite individualmente, sin separadores ni terminadores de trama adicionales.
+
+Ejemplos:
+
+| Canal | Porcentaje | Byte transmitido |
+|---|---:|---:|
+| ADC0 | 25 % | 25 |
+| ADC0 | 80 % | 80 |
+| ADC1 | 25 % | 125 |
+| ADC1 | 80 % | 180 |
+
+En el receptor, los valores entre 0 y 100 corresponden al ADC0, mientras que los valores entre 101 y 200 corresponden al ADC1. Para recuperar el porcentaje del segundo canal se resta 100 al dato recibido.
+
+
 
 ## 6. Conexiones
 
@@ -131,14 +146,15 @@ Reemplazar `COM3` por el puerto correspondiente.
 ## 8. Funcionamiento esperado
 
 1. Arduino2 adquiere las lecturas de los canales ADC0 y ADC1.
-2. Los valores se convierten a una trama de caracteres ASCII.
-3. La trama se transmite mediante UART.
-4. Arduino1 recibe y procesa la información.
-5. Los valores se visualizan en el LCD.
+2. Convierte cada lectura a un porcentaje entre 0 y 100 %.
+3. Codifica los datos según el canal ADC.
+4. Transmite individualmente cada byte mediante UART.
+5. Arduino1 recibe e identifica el canal correspondiente.
+6. Arduino1 actualiza la visualización en el LCD.
 
 Ejemplo de visualización:
 
 ```text
-ADC0: 512
-ADC1: 768
+ADC0: 50
+ADC1: 45
 ```
